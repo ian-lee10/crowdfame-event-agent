@@ -40,14 +40,12 @@ jobs:
           CROWDFAME_API_URL: ${{ secrets.CROWDFAME_API_URL }}
           CROWDFAME_API_KEY: ${{ secrets.CROWDFAME_API_KEY }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
-        run: |
-          cd src
-          python main.py
+        run: python main.py
 
       - name: Upload run logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: run-logs-${{ github.run_number }}
-          path: src/logs/
+          path: logs/
           retention-days: 30

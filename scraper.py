@@ -26,8 +26,9 @@ def trigger_apify_run() -> str:
 
     url = f"https://api.apify.com/v2/acts/{APIFY_ACTOR_ID}/runs"
     payload = {
-        "search": DFW_SEARCHES,
-        "maxEvents": 50,
+        "searchQueries": DFW_SEARCHES,
+        "maxEvents": 30,
+        "startUrls": []
     }
 
     resp = httpx.post(

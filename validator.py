@@ -62,7 +62,7 @@ For APPROVED events, normalize to this exact schema:
     "state": "TX",
     "description": "Plain text description",
     "sourceUrl": "https://facebook.com/events/...",
-    "posterImageUrl": "https://... or null",
+    "posterImageUrl": "https://... (from imageUrl field, or null if missing)",
     "creatorName": "Organizer name or null",
     "instagramHandle": "@handle or null",
     "country": "US"
@@ -75,6 +75,7 @@ CRITICAL NOTES:
 - date must be YYYY-MM-DD (event's local date)
 - startTime must be YYYY-MM-DDTHH:mm (local wall-clock time, NO Z, NO timezone offset)
 - timezone must be IANA name like America/Chicago, NOT abbreviations like CST
+- posterImageUrl: Use the imageUrl field if provided; if null/missing, set to null
 - If you can't reliably get instagramHandle, set to null (don't guess)
 - If no end time, set endTime to null
 - Prefer venue name in location field; include street address if available
@@ -108,9 +109,9 @@ def validate_chunk(chunk: list[dict]) -> list[ValidationResult]:
             "end": e.get("endTimestamp") or e.get("end_time"),
             "location": e.get("location") or e.get("place"),
             "url": e.get("url"),
+            "imageUrl": e.get("imageUrl"),
             "organizer": e.get("hosts") or e.get("organizer"),
             "attendingCount": e.get("attendingCount"),
-            "image": e.get("photo") or e.get("coverPhoto"),
         })
 
     response = client.messages.create(

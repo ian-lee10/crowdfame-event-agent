@@ -1,8 +1,7 @@
 """
 validator.py
 AI-powered background check agent. Uses Claude to evaluate each event
-for legitimacy, spam, scams, duplicate content, and policy compliance
-before it gets pushed to the Crowdfame API.
+for legitimacy, then normalizes approved events to Crowdfame API schema.
 """
 
 import anthropic
@@ -18,9 +17,9 @@ client = anthropic.Anthropic()
 class ValidationResult(TypedDict):
     event_id: str
     legitimate: bool
-    confidence: float          # 0.0 – 1.0
-    flags: list[str]           # e.g. ["spam", "vague_location", "past_event"]
-    normalized: dict | None    # cleaned event if legitimate, else None
+    confidence: float
+    flags: list[str]
+    normalized: dict | None
     reasoning: str
 
 
@@ -45,33 +44,42 @@ APPROVE the event if:
 - The organizer appears to be a legitimate person, brand, or venue
 - The description provides genuine value to potential attendees
 
-Respond ONLY with a JSON array, one object per event, with this exact schema:
-[
-  {
-    "event_id": "<id from input>",
-    "legitimate": true | false,
-    "confidence": 0.0-1.0,
-    "flags": ["flag1", "flag2"],
-    "reasoning": "One sentence explanation",
-    "normalized": {
-      "title": "...",
-      "description": "...",
-      "start_datetime": "ISO8601",
-      "end_datetime": "ISO8601 or null",
-      "location_name": "...",
-      "location_address": "...",
-      "city": "...",
-      "state": "...",
-      "url": "https://facebook.com/events/...",
-      "organizer_name": "...",
-      "category": "music|sports|food|arts|community|business|tech|health|other",
-      "image_url": "... or null"
-    }
+For APPROVED events, normalize to this exact schema:
+{
+  "event_id": "stable_id_from_facebook",
+  "legitimate": true,
+  "confidence": 0.0-1.0,
+  "flags": [],
+  "reasoning": "One sentence explanation",
+  "normalized": {
+    "title": "Event Name",
+    "date": "YYYY-MM-DD",
+    "startTime": "YYYY-MM-DDTHH:mm",
+    "endTime": "YYYY-MM-DDTHH:mm or null",
+    "timezone": "America/Chicago (IANA name)",
+    "location": "Venue name and/or address",
+    "city": "Dallas",
+    "state": "TX",
+    "description": "Plain text description",
+    "sourceUrl": "https://facebook.com/events/...",
+    "posterImageUrl": "https://... or null",
+    "creatorName": "Organizer name or null",
+    "instagramHandle": "@handle or null",
+    "country": "US"
   }
-]
+}
 
-If legitimate is false, set normalized to null.
-Never include markdown, code fences, or any text outside the JSON array.
+For REJECTED events, set normalized to null.
+
+CRITICAL NOTES:
+- date must be YYYY-MM-DD (event's local date)
+- startTime must be YYYY-MM-DDTHH:mm (local wall-clock time, NO Z, NO timezone offset)
+- timezone must be IANA name like America/Chicago, NOT abbreviations like CST
+- If you can't reliably get instagramHandle, set to null (don't guess)
+- If no end time, set endTime to null
+- Prefer venue name in location field; include street address if available
+
+Respond ONLY with a JSON array, never include markdown or text outside the JSON.
 """
 
 
@@ -90,7 +98,6 @@ def assign_ids(events: list[dict]) -> list[dict]:
 
 def validate_chunk(chunk: list[dict]) -> list[ValidationResult]:
     """Send one chunk to Claude for background-check validation."""
-    # Strip heavy/irrelevant fields before sending to save tokens
     slim = []
     for e in chunk:
         slim.append({
@@ -117,14 +124,12 @@ def validate_chunk(chunk: list[dict]) -> list[ValidationResult]:
     )
 
     raw = response.content[0].text.strip()
-    # Strip any accidental markdown fences
     raw = re.sub(r"^```json\s*|^```\s*|\s*```$", "", raw, flags=re.MULTILINE).strip()
 
     try:
         return json.loads(raw)
     except json.JSONDecodeError as e:
         print(f"  ⚠️  JSON parse error in chunk: {e}")
-        # Return all as rejected rather than crash
         return [
             {
                 "event_id": ev.get("id", "unknown"),
@@ -149,7 +154,7 @@ def deduplicate(results: list[ValidationResult]) -> list[ValidationResult]:
             deduped.append(r)
             continue
 
-        url = r["normalized"].get("url", "")
+        url = r["normalized"].get("sourceUrl", "")
         title = r["normalized"].get("title", "").lower().strip()
 
         if url in seen_urls:
@@ -194,7 +199,6 @@ def run_validation(events: list[dict]) -> tuple[list[ValidationResult], list[dic
     print(f"\n  ✅ Approved: {len(approved)}")
     print(f"  ❌ Rejected: {len(rejected)}")
 
-    # Print rejection summary
     flag_counts: dict[str, int] = {}
     for r in rejected:
         for flag in r.get("flags", []):

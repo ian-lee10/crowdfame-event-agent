@@ -12,11 +12,20 @@ from datetime import datetime
 APIFY_TOKEN = os.environ["APIFY_TOKEN"]
 APIFY_ACTOR_ID = "UZBnerCFBo5FgGouO"
 
-# DFW search queries
+# Texas search queries
 DFW_SEARCHES = [
     "events Dallas TX",
     "events Fort Worth TX",
     "events Arlington TX",
+    "events Houston TX",
+    "events San Antonio TX",
+    "events Austin TX",
+    "events El Paso TX",
+    "events Lubbock TX",
+    "events Amarillo TX",
+    "events Corpus Christi TX",
+    "events Waco TX",
+    "events Midland TX",
 ]
 
 

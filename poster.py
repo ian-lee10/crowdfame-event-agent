@@ -24,44 +24,8 @@ RETRY_DELAY = 5        # seconds between retries
 RATE_LIMIT_PAUSE = 1   # seconds between successful POSTs to avoid hammering the API
 
 
-def post_event(event: dict, client: httpx.Client) -> dict:
-    """POST a single event to the Crowdfame API with retries."""
-    url = f"{CROWDFAME_API_URL}/events"
-
-    for attempt in range(1, MAX_RETRIES + 1):
-        try:
-            resp = client.post(url, json=event, headers=HEADERS, timeout=15)
-
-            if resp.status_code == 201:
-                return {"status": "created", "id": resp.json().get("id"), "event": event["title"]}
-            elif resp.status_code == 409:
-                return {"status": "duplicate", "event": event["title"]}
-            elif resp.status_code == 422:
-                return {"status": "invalid", "event": event["title"], "detail": resp.text}
-            elif resp.status_code == 429:
-                # Rate limited — back off
-                retry_after = int(resp.headers.get("Retry-After", 60))
-                print(f"    Rate limited. Waiting {retry_after}s...")
-                time.sleep(retry_after)
-                continue
-            else:
-                resp.raise_for_status()
-
-        except (httpx.HTTPStatusError, httpx.RequestError) as e:
-            if attempt < MAX_RETRIES:
-                print(f"    Attempt {attempt} failed ({e}). Retrying in {RETRY_DELAY}s...")
-                time.sleep(RETRY_DELAY)
-            else:
-                return {"status": "error", "event": event.get("title", "unknown"), "detail": str(e)}
-
-    return {"status": "error", "event": event.get("title", "unknown"), "detail": "Max retries exceeded"}
-
-
 def run_poster(approved_events: list[dict]) -> dict:
-    """
-    POST all approved events to Crowdfame API.
-    Returns a summary report.
-    """
+    """POST all approved events to Crowdfame API as a single batch."""
     now = datetime.now(timezone.utc).isoformat()
     print(f"[{now}] Posting {len(approved_events)} approved events to Crowdfame API...")
 
@@ -75,26 +39,33 @@ def run_poster(approved_events: list[dict]) -> dict:
         "details": []
     }
 
-    with httpx.Client() as client:
-        for i, event in enumerate(approved_events):
-            result = post_event(event, client)
-            report["details"].append(result)
+    url = f"{CROWDFAME_API_URL}/events"
 
-            status = result["status"]
-            if status == "created":
-                report["created"] += 1
-                print(f"  [{i+1}/{len(approved_events)}] ✅ Created: {event.get('title')}")
-            elif status == "duplicate":
-                report["duplicates"] += 1
-                print(f"  [{i+1}/{len(approved_events)}] ⏭️  Duplicate: {event.get('title')}")
-            elif status == "invalid":
-                report["invalid"] += 1
-                print(f"  [{i+1}/{len(approved_events)}] ⚠️  Invalid: {event.get('title')} — {result.get('detail')}")
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            with httpx.Client() as client:
+                resp = client.post(url, json=approved_events, headers=HEADERS, timeout=30)
+
+            if resp.status_code == 201:
+                data = resp.json()
+                report["created"] = data.get("created", 0)
+                report["duplicates"] = data.get("skipped", 0)
+                print(f"  ✅ Created: {report['created']}, ⏭️  Skipped (duplicates): {report['duplicates']}")
+                break
+            elif resp.status_code == 429:
+                retry_after = int(resp.headers.get("Retry-After", 60))
+                print(f"    Rate limited. Waiting {retry_after}s...")
+                time.sleep(retry_after)
             else:
-                report["errors"] += 1
-                print(f"  [{i+1}/{len(approved_events)}] ❌ Error: {event.get('title')} — {result.get('detail')}")
+                resp.raise_for_status()
 
-            time.sleep(RATE_LIMIT_PAUSE)
+        except (httpx.HTTPStatusError, httpx.RequestError) as e:
+            if attempt < MAX_RETRIES:
+                print(f"    Attempt {attempt} failed ({e}). Retrying in {RETRY_DELAY}s...")
+                time.sleep(RETRY_DELAY)
+            else:
+                report["errors"] = len(approved_events)
+                print(f"  ❌ All events failed: {e}")
 
     print(f"\n  Summary: {report['created']} created, {report['duplicates']} duplicates, "
           f"{report['invalid']} invalid, {report['errors']} errors")

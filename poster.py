@@ -52,6 +52,9 @@ def run_poster(approved_events: list[dict]) -> dict:
                 report["duplicates"] = data.get("skipped", 0)
                 print(f"  ✅ Created: {report['created']}, ⏭️  Skipped (duplicates): {report['duplicates']}")
                 break
+            elif resp.status_code == 422:
+                print(f"  ❌ Validation error from API: {resp.text}")
+                break
             elif resp.status_code == 429:
                 retry_after = int(resp.headers.get("Retry-After", 60))
                 print(f"    Rate limited. Waiting {retry_after}s...")

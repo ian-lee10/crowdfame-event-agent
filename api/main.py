@@ -4,15 +4,15 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Security, Depends
-from fastapi.security.api_key import APIKeyHeader
-from pydantic import BaseModel, HttpUrl
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./events.db")
 API_KEY = os.environ.get("API_KEY", "")
 
 engine = create_engine(DATABASE_URL)
-api_key_header = APIKeyHeader(name="X-API-Key")
+bearer_scheme = HTTPBearer()
 
 app = FastAPI(title="Events API")
 
@@ -58,10 +58,10 @@ def on_startup():
     SQLModel.metadata.create_all(engine)
 
 
-def require_api_key(key: str = Security(api_key_header)):
-    if not API_KEY or key != API_KEY:
+def require_api_key(credentials: HTTPAuthorizationCredentials = Security(bearer_scheme)):
+    if not API_KEY or credentials.credentials != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API key")
-    return key
+    return credentials.credentials
 
 
 @app.post("/events", status_code=201)

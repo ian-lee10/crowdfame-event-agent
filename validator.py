@@ -16,8 +16,8 @@ class ValidationResult(TypedDict):
 
 SYSTEM_PROMPT = """You are a Crowdfame event validator. Evaluate Facebook events.
 
-REJECT if: spam, MLM, past event, vague location, <20 word description, private
-APPROVE if: real US public event, clear title/location/date
+REJECT if: spam, MLM, past event, vague location, <20 word description, private, hiring/job fair/recruiting event, real estate open house, sales pitch or product demo, religious service/church worship, funeral/memorial service
+APPROVE if: real US public community event, clear title/location/date — concerts, festivals, sports, arts, food/drink events, charity walks, conventions, expos
 
 ALWAYS respond with ONLY this JSON format (no markdown, no text outside JSON):
 [

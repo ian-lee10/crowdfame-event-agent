@@ -71,7 +71,7 @@ def validate_chunk(chunk: list[dict]) -> list[ValidationResult]:
 
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=3000,
+        max_tokens=8000,
         system=SYSTEM_PROMPT,
         messages=[{
             "role": "user",
@@ -118,7 +118,7 @@ def deduplicate(results: list[ValidationResult]) -> list[ValidationResult]:
 def run_validation(events: list[dict]) -> tuple[list[ValidationResult], list[dict]]:
     print(f"[{datetime.now(timezone.utc).isoformat()}] Validating {len(events)} events...")
     events = assign_ids(events)
-    chunks = chunk_events(events, chunk_size=15)
+    chunks = chunk_events(events, chunk_size=5)
     all_results: list[ValidationResult] = []
     
     for i, chunk in enumerate(chunks):

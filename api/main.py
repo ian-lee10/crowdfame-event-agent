@@ -67,8 +67,16 @@ def require_api_key(key: str = Security(api_key_header)):
 @app.post("/events", status_code=201)
 def create_events(events: list[EventIn], _: str = Depends(require_api_key)):
     created = []
+    skipped = 0
     with Session(engine) as session:
         for e in events:
+            if e.sourceUrl:
+                existing = session.exec(
+                    select(Event).where(Event.source_url == e.sourceUrl)
+                ).first()
+                if existing:
+                    skipped += 1
+                    continue
             row = Event(
                 title=e.title,
                 date=e.date,
@@ -88,7 +96,7 @@ def create_events(events: list[EventIn], _: str = Depends(require_api_key)):
             session.add(row)
             created.append(row.id)
         session.commit()
-    return {"created": len(created), "ids": created}
+    return {"created": len(created), "skipped": skipped, "ids": created}
 
 
 @app.get("/events")

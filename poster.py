@@ -26,6 +26,7 @@ RATE_LIMIT_PAUSE = 1   # seconds between successful POSTs to avoid hammering the
 
 def run_poster(approved_events: list[dict]) -> dict:
     """POST all approved events to Crowdfame API as a single batch."""
+    approved_events = [e for e in approved_events if e.get("title") and e.get("date")]
     now = datetime.now(timezone.utc).isoformat()
     print(f"[{now}] Posting {len(approved_events)} approved events to Crowdfame API...")
 

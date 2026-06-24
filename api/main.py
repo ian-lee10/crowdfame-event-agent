@@ -37,8 +37,8 @@ class Event(SQLModel, table=True):
 
 
 class EventIn(BaseModel):
-    title: str
-    date: str
+    title: Optional[str] = None
+    date: Optional[str] = None
     startTime: Optional[str] = None
     endTime: Optional[str] = None
     timezone: Optional[str] = None
@@ -70,6 +70,9 @@ def create_events(events: list[EventIn], _: str = Depends(require_api_key)):
     skipped = 0
     with Session(engine) as session:
         for e in events:
+            if not e.title or not e.date:
+                skipped += 1
+                continue
             if e.sourceUrl:
                 existing = session.exec(
                     select(Event).where(Event.source_url == e.sourceUrl)

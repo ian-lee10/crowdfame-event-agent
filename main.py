@@ -55,6 +55,11 @@ def main():
         save_report(report)
         sys.exit(1)
 
+    if not raw_events:
+        print("⏭️  No events to process (weekend skip).")
+        save_report(report)
+        return
+
     # ── Stage 2: Validate ─────────────────────────────────────────
     print("\n🔍 STAGE 2: Running AI background checks...")
     try:
@@ -79,11 +84,6 @@ def main():
         report["stages"]["validate"] = {"status": "error", "error": str(e)}
         save_report(report)
         sys.exit(1)
-
-    if not raw_events:
-        print("⏭️  No events to process (weekend skip).")
-        save_report(report)
-        return
 
     if not approved_events:
         print("⚠️  No events passed validation. Nothing to post.")

@@ -18,7 +18,7 @@ jobs:
   run-agent:
     name: Scrape → Validate → Post
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 360
 
     steps:
       - name: Checkout code

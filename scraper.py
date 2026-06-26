@@ -13,124 +13,45 @@ from datetime import datetime
 APIFY_TOKEN = os.environ["APIFY_TOKEN"]
 APIFY_ACTOR_ID = "UZBnerCFBo5FgGouO"
 
+MARKET_TERMS = ["vendor market", "pop-up market", "thrift market", "swap meet", "flea market", "craft fair", "artisan market", "night market"]
+
+def build_searches(cities: list[str]) -> list[str]:
+    searches = []
+    for city in cities:
+        for term in MARKET_TERMS:
+            searches.append(f"{term} {city}")
+    return searches
+
 CITIES_BY_STATE = {
-    "TX": [
-        # DFW Metro
-        "events Dallas TX",
-        "events Fort Worth TX",
-        "events Arlington TX",
-        "events Plano TX",
-        "events Frisco TX",
-        "events McKinney TX",
-        "events Irving TX",
-        "events Garland TX",
-        "events Denton TX",
-        "events Grand Prairie TX",
-        # Houston Metro
-        "events Houston TX",
-        "events Sugar Land TX",
-        "events The Woodlands TX",
-        "events Pasadena TX",
-        # San Antonio Metro
-        "events San Antonio TX",
-        "events New Braunfels TX",
-        # Austin Metro
-        "events Austin TX",
-        "events Round Rock TX",
-        "events Cedar Park TX",
-        # Other major TX cities
-        "events El Paso TX",
-        "events Lubbock TX",
-        "events Amarillo TX",
-        "events Corpus Christi TX",
-        "events Waco TX",
-        "events Midland TX",
-    ],
-    "CA": [
-        # LA Metro
-        "events Los Angeles CA",
-        "events Long Beach CA",
-        "events Anaheim CA",
-        "events Santa Ana CA",
-        "events Riverside CA",
-        "events San Bernardino CA",
-        "events Glendale CA",
-        "events Pasadena CA",
-        # Bay Area
-        "events San Francisco CA",
-        "events San Jose CA",
-        "events Oakland CA",
-        "events Berkeley CA",
-        "events Fremont CA",
-        "events Santa Clara CA",
-        # San Diego
-        "events San Diego CA",
-        "events Chula Vista CA",
-        # Other
-        "events Sacramento CA",
-        "events Fresno CA",
-        "events Bakersfield CA",
-        "events Stockton CA",
-    ],
-    "NY": [
-        # NYC Boroughs
-        "events Manhattan NY",
-        "events Brooklyn NY",
-        "events Queens NY",
-        "events Bronx NY",
-        "events Staten Island NY",
-        # NYC Suburbs
-        "events Yonkers NY",
-        "events White Plains NY",
-        "events Hempstead NY",
-        # Upstate
-        "events Buffalo NY",
-        "events Rochester NY",
-        "events Albany NY",
-        "events Syracuse NY",
-        "events Niagara Falls NY",
-        "events Saratoga Springs NY",
-    ],
-    "FL": [
-        # Miami Metro
-        "events Miami FL",
-        "events Fort Lauderdale FL",
-        "events Boca Raton FL",
-        "events West Palm Beach FL",
-        "events Hialeah FL",
-        # Orlando Metro
-        "events Orlando FL",
-        "events Kissimmee FL",
-        "events Sanford FL",
-        # Tampa Bay
-        "events Tampa FL",
-        "events St Petersburg FL",
-        "events Clearwater FL",
-        "events Sarasota FL",
-        # Other
-        "events Jacksonville FL",
-        "events Tallahassee FL",
-        "events Gainesville FL",
-        "events Pensacola FL",
-        "events Fort Myers FL",
-    ],
-    "IL": [
-        # Chicago Metro
-        "events Chicago IL",
-        "events Naperville IL",
-        "events Aurora IL",
-        "events Joliet IL",
-        "events Evanston IL",
-        "events Waukegan IL",
-        "events Elgin IL",
-        "events Schaumburg IL",
-        "events Oak Park IL",
-        # Downstate
-        "events Rockford IL",
-        "events Peoria IL",
-        "events Springfield IL",
-        "events Champaign IL",
-    ],
+    "TX": build_searches([
+        "Dallas TX", "Fort Worth TX", "Arlington TX", "Plano TX", "Frisco TX",
+        "McKinney TX", "Irving TX", "Garland TX", "Denton TX", "Grand Prairie TX",
+        "Houston TX", "Sugar Land TX", "The Woodlands TX",
+        "San Antonio TX", "Austin TX", "Round Rock TX",
+        "El Paso TX", "Lubbock TX", "Corpus Christi TX", "Waco TX",
+    ]),
+    "CA": build_searches([
+        "Los Angeles CA", "Long Beach CA", "Anaheim CA", "Riverside CA",
+        "Glendale CA", "Pasadena CA",
+        "San Francisco CA", "San Jose CA", "Oakland CA", "Berkeley CA",
+        "San Diego CA", "Sacramento CA", "Fresno CA",
+    ]),
+    "NY": build_searches([
+        "Manhattan NY", "Brooklyn NY", "Queens NY", "Bronx NY",
+        "Yonkers NY", "Hempstead NY",
+        "Buffalo NY", "Rochester NY", "Albany NY", "Syracuse NY",
+    ]),
+    "FL": build_searches([
+        "Miami FL", "Fort Lauderdale FL", "West Palm Beach FL",
+        "Orlando FL", "Kissimmee FL",
+        "Tampa FL", "St Petersburg FL", "Sarasota FL",
+        "Jacksonville FL", "Gainesville FL", "Fort Myers FL",
+    ]),
+    "IL": build_searches([
+        "Chicago IL", "Naperville IL", "Aurora IL", "Joliet IL",
+        "Evanston IL", "Elgin IL", "Schaumburg IL",
+        "Rockford IL", "Peoria IL", "Springfield IL",
+    ]),
 }
 
 # Monday=0 ... Friday=4, weekend days fall back to TX

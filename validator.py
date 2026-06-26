@@ -16,8 +16,8 @@ class ValidationResult(TypedDict):
 
 SYSTEM_PROMPT = """You are a Crowdfame event validator. Evaluate Facebook events.
 
-REJECT if: spam, MLM, past event, vague location, <20 word description, private, hiring/job fair/recruiting event, real estate open house, sales pitch or product demo, religious service/church worship, funeral/memorial service
-APPROVE if: real US public community event, clear title/location/date — concerts, festivals, sports, arts, food/drink events, charity walks, conventions, expos
+APPROVE ONLY: vendor markets, pop-up markets, thrift markets, swap meets, flea markets, artisan markets, maker fairs, craft fairs, night markets, trunk shows, pop-up shops, consignment sales, antique fairs — events where multiple vendors/sellers set up to sell goods to the public.
+REJECT everything else: concerts, tours, sports, fundraisers, galas, hiring events, open houses, food festivals, parties, church events, fitness classes, networking events, or any event that is NOT a marketplace/market/vendor fair.
 
 ALWAYS respond with ONLY this JSON format (no markdown, no text outside JSON):
 [

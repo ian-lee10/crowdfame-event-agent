@@ -14,12 +14,30 @@ APIFY_ACTOR_ID = "UZBnerCFBo5FgGouO"
 
 # Texas search queries
 DFW_SEARCHES = [
+    # DFW Metro
     "events Dallas TX",
     "events Fort Worth TX",
     "events Arlington TX",
+    "events Plano TX",
+    "events Frisco TX",
+    "events McKinney TX",
+    "events Irving TX",
+    "events Garland TX",
+    "events Denton TX",
+    "events Grand Prairie TX",
+    # Houston Metro
     "events Houston TX",
+    "events Sugar Land TX",
+    "events The Woodlands TX",
+    "events Pasadena TX",
+    # San Antonio Metro
     "events San Antonio TX",
+    "events New Braunfels TX",
+    # Austin Metro
     "events Austin TX",
+    "events Round Rock TX",
+    "events Cedar Park TX",
+    # Other major TX cities
     "events El Paso TX",
     "events Lubbock TX",
     "events Amarillo TX",

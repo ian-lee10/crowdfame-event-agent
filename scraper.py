@@ -54,7 +54,7 @@ CITIES_BY_STATE = {
     ]),
 }
 
-# Monday=0 ... Friday=4, weekend days fall back to TX
+# Monday=0 ... Friday=4, weekends skip
 WEEKDAY_STATE = {
     0: "TX",
     1: "CA",
@@ -101,7 +101,7 @@ def trigger_apify_run() -> str:
     return run_id
 
 
-def wait_for_run(run_id: str, poll_interval: int = 15, max_wait: int = 600) -> str:
+def wait_for_run(run_id: str, poll_interval: int = 15, max_wait: int = 7200) -> str:
     url = f"https://api.apify.com/v2/actor-runs/{run_id}"
     elapsed = 0
 

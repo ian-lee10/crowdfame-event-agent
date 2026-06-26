@@ -144,12 +144,20 @@ WEEKDAY_STATE = {
 
 
 def get_today_searches() -> tuple[str, list[str]]:
-    state = os.environ.get("TARGET_STATE") or WEEKDAY_STATE.get(datetime.utcnow().weekday(), "TX")
+    state = os.environ.get("TARGET_STATE")
+    if not state:
+        weekday = datetime.utcnow().weekday()
+        if weekday not in WEEKDAY_STATE:
+            print("  Weekend — skipping run.")
+            return None, []
+        state = WEEKDAY_STATE[weekday]
     return state, CITIES_BY_STATE[state]
 
 
 def trigger_apify_run() -> str:
     state, searches = get_today_searches()
+    if not searches:
+        return None
     print(f"[{datetime.now().isoformat()}] Triggering Apify actor run for {state} ({len(searches)} cities)...")
 
     url = f"https://api.apify.com/v2/acts/{APIFY_ACTOR_ID}/runs"
@@ -211,6 +219,8 @@ def fetch_events(dataset_id: str) -> list[dict]:
 
 def run_scraper() -> list[dict]:
     run_id = trigger_apify_run()
+    if run_id is None:
+        return []
     dataset_id = wait_for_run(run_id)
     return fetch_events(dataset_id)
 

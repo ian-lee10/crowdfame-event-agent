@@ -80,6 +80,11 @@ def main():
         save_report(report)
         sys.exit(1)
 
+    if not raw_events:
+        print("⏭️  No events to process (weekend skip).")
+        save_report(report)
+        return
+
     if not approved_events:
         print("⚠️  No events passed validation. Nothing to post.")
         report["stages"]["post"] = {"status": "skipped", "reason": "no_approved_events"}

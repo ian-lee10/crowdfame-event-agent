@@ -87,6 +87,10 @@ def validate_chunk(chunk: list[dict]) -> list[ValidationResult]:
         for i, r in enumerate(results):
             if r.get("legitimate") and r.get("normalized"):
                 r["normalized"]["posterImageUrl"] = chunk[i].get("imageUrl")
+                # Pass Facebook event ID as sourceId for API-level deduplication
+                fb_id = chunk[i].get("id") or chunk[i].get("eventId")
+                if fb_id:
+                    r["normalized"]["sourceId"] = f"fb-{fb_id}"
         return results
     except (json.JSONDecodeError, KeyError, IndexError) as e:
         print(f"    Parse error: {e}")

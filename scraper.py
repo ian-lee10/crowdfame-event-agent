@@ -13,7 +13,7 @@ from datetime import datetime
 APIFY_TOKEN = os.environ["APIFY_TOKEN"]
 APIFY_ACTOR_ID = "UZBnerCFBo5FgGouO"
 
-MARKET_TERMS = ["vendor market", "pop-up market", "thrift market", "swap meet", "flea market", "craft fair", "artisan market", "night market"]
+MARKET_TERMS = ["vendor market", "pop-up market", "flea market", "craft fair", "artisan market", "night market"]
 
 def build_searches(cities: list[str]) -> list[str]:
     searches = []
@@ -24,33 +24,24 @@ def build_searches(cities: list[str]) -> list[str]:
 
 CITIES_BY_STATE = {
     "TX": build_searches([
-        "Dallas TX", "Fort Worth TX", "Arlington TX", "Plano TX", "Frisco TX",
-        "McKinney TX", "Irving TX", "Garland TX", "Denton TX", "Grand Prairie TX",
-        "Houston TX", "Sugar Land TX", "The Woodlands TX",
-        "San Antonio TX", "Austin TX", "Round Rock TX",
-        "El Paso TX", "Lubbock TX", "Corpus Christi TX", "Waco TX",
+        "Dallas TX", "Fort Worth TX", "Houston TX",
+        "San Antonio TX", "Austin TX", "El Paso TX",
     ]),
     "CA": build_searches([
-        "Los Angeles CA", "Long Beach CA", "Anaheim CA", "Riverside CA",
-        "Glendale CA", "Pasadena CA",
-        "San Francisco CA", "San Jose CA", "Oakland CA", "Berkeley CA",
-        "San Diego CA", "Sacramento CA", "Fresno CA",
+        "Los Angeles CA", "San Francisco CA", "San Diego CA",
+        "San Jose CA", "Sacramento CA", "Riverside CA",
     ]),
     "NY": build_searches([
-        "Manhattan NY", "Brooklyn NY", "Queens NY", "Bronx NY",
-        "Yonkers NY", "Hempstead NY",
-        "Buffalo NY", "Rochester NY", "Albany NY", "Syracuse NY",
+        "Manhattan NY", "Brooklyn NY", "Queens NY",
+        "Buffalo NY", "Albany NY",
     ]),
     "FL": build_searches([
-        "Miami FL", "Fort Lauderdale FL", "West Palm Beach FL",
-        "Orlando FL", "Kissimmee FL",
-        "Tampa FL", "St Petersburg FL", "Sarasota FL",
-        "Jacksonville FL", "Gainesville FL", "Fort Myers FL",
+        "Miami FL", "Orlando FL", "Tampa FL",
+        "Jacksonville FL", "Fort Lauderdale FL",
     ]),
     "IL": build_searches([
-        "Chicago IL", "Naperville IL", "Aurora IL", "Joliet IL",
-        "Evanston IL", "Elgin IL", "Schaumburg IL",
-        "Rockford IL", "Peoria IL", "Springfield IL",
+        "Chicago IL", "Aurora IL", "Rockford IL",
+        "Springfield IL", "Naperville IL",
     ]),
 }
 
@@ -84,7 +75,7 @@ def trigger_apify_run() -> str:
     url = f"https://api.apify.com/v2/acts/{APIFY_ACTOR_ID}/runs"
     payload = {
         "searchQueries": searches,
-        "maxEvents": 30,
+        "maxEvents": 50,
         "startUrls": []
     }
 
@@ -101,7 +92,7 @@ def trigger_apify_run() -> str:
     return run_id
 
 
-def wait_for_run(run_id: str, poll_interval: int = 15, max_wait: int = 7200) -> str:
+def wait_for_run(run_id: str, poll_interval: int = 30, max_wait: int = 18000) -> str:
     url = f"https://api.apify.com/v2/actor-runs/{run_id}"
     elapsed = 0
 

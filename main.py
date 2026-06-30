@@ -16,6 +16,7 @@ from pathlib import Path
 from scraper import run_scraper
 from validator import run_validation
 from poster import run_poster
+from dedup import filter_new_events, mark_posted
 
 LOGS_DIR = Path("logs")
 LOGS_DIR.mkdir(exist_ok=True)
@@ -60,10 +61,20 @@ def main():
         save_report(report)
         return
 
+    # ── Dedup: skip already-seen events ──────────────────────────
+    new_events = filter_new_events(raw_events)
+    report["stages"]["scrape"]["already_seen"] = len(raw_events) - len(new_events)
+    report["stages"]["scrape"]["new_count"] = len(new_events)
+
+    if not new_events:
+        print("⏭️  All scraped events already seen. Nothing new to process.")
+        save_report(report)
+        return
+
     # ── Stage 2: Validate ─────────────────────────────────────────
     print("\n🔍 STAGE 2: Running AI background checks...")
     try:
-        validation_results, approved_events = run_validation(raw_events)
+        validation_results, approved_events = run_validation(new_events)
         report["stages"]["validate"] = {
             "status": "ok",
             "total_checked": len(validation_results),
@@ -99,6 +110,7 @@ def main():
             "status": "ok",
             **{k: v for k, v in post_report.items() if k != "details"},
         }
+        mark_posted(approved_events)
     except Exception as e:
         print(f"❌ Posting failed: {e}")
         report["stages"]["post"] = {"status": "error", "error": str(e)}

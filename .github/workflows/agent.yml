@@ -10,6 +10,11 @@ on:
         required: false
         default: "false"
         type: boolean
+      target_state:
+        description: "Override state (TX/CA/NY/FL/IL). Leave blank for day-of-week rotation."
+        required: false
+        default: ""
+        type: string
 
 jobs:
   run-agent:
@@ -48,6 +53,7 @@ jobs:
           CROWDFAME_API_URL: ${{ secrets.CROWDFAME_API_URL }}
           CROWDFAME_API_KEY: ${{ secrets.CROWDFAME_API_KEY }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          TARGET_STATE: ${{ github.event.inputs.target_state || '' }}
         run: python main.py
 
       - name: Upload run logs

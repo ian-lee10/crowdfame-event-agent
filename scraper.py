@@ -75,7 +75,7 @@ def trigger_apify_run() -> str:
     url = f"https://api.apify.com/v2/acts/{APIFY_ACTOR_ID}/runs"
     payload = {
         "searchQueries": searches,
-        "maxEvents": 50,
+        "maxEvents": 5,
         "startUrls": []
     }
 

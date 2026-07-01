@@ -111,6 +111,15 @@ def main():
         save_report(report)
         return
 
+    # ── Filter: require poster image ──────────────────────────────
+    approved_events = [e for e in approved_events if e.get("posterImageUrl")]
+    report["stages"]["validate"]["with_poster"] = len(approved_events)
+
+    if not approved_events:
+        print("⏭️  No events have a poster image. Nothing to post.")
+        save_report(report)
+        return
+
     # ── Stage 3: Post ─────────────────────────────────────────────
     print("\n📤 STAGE 3: Posting approved events to Crowdfame API...")
     try:

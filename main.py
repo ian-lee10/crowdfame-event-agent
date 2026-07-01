@@ -16,7 +16,7 @@ from pathlib import Path
 from scraper import run_scraper
 from validator import run_validation
 from poster import run_poster
-from dedup import filter_new_events, mark_posted
+from dedup import filter_new_events, filter_approved_events, mark_posted
 
 LOGS_DIR = Path("logs")
 LOGS_DIR.mkdir(exist_ok=True)
@@ -102,6 +102,15 @@ def main():
         save_report(report)
         return
 
+    # ── Dedup stage 2: title+date check ──────────────────────────
+    approved_events = filter_approved_events(approved_events)
+    report["stages"]["validate"]["deduped"] = len(approved_events)
+
+    if not approved_events:
+        print("⏭️  All approved events already posted (title+date match). Nothing new.")
+        save_report(report)
+        return
+
     # ── Stage 3: Post ─────────────────────────────────────────────
     print("\n📤 STAGE 3: Posting approved events to Crowdfame API...")
     try:
@@ -110,7 +119,7 @@ def main():
             "status": "ok",
             **{k: v for k, v in post_report.items() if k != "details"},
         }
-        mark_posted(approved_events)
+        mark_posted(new_events, approved_events)
     except Exception as e:
         print(f"❌ Posting failed: {e}")
         report["stages"]["post"] = {"status": "error", "error": str(e)}
